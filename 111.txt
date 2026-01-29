@@ -1,0 +1,112 @@
+package com.mycompany.rmii;
+
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PerfectNumberServer extends UnicastRemoteObject implements PerfectNumber {
+
+    protected PerfectNumberServer() throws RemoteException {
+        super();
+    }
+
+    // Hàm kiểm tra số hoàn thiện
+    private boolean isPerfect(int n) {
+        if (n < 2) return false;
+        int sum = 1; // 1 luôn là ước
+        for (int i = 2; i <= n / 2; i++) {
+            if (n % i == 0) sum += i;
+        }
+        return sum == n;
+    }
+
+    @Override
+    public List<String> findPerfectNumbers(int[] numbers) throws RemoteException {
+        List<String> results = new ArrayList<>();
+        for (int i = 0; i < numbers.length; i++) {
+            if (isPerfect(numbers[i])) {
+                results.add("Số hoàn thiện: " + numbers[i] + " vị trí: " + (i + 1));
+            }
+        }
+        if (results.isEmpty()) {
+            results.add("Không có số hoàn thiện trong dãy!");
+        }
+        return results;
+    }
+
+    public static void main(String[] args) {
+        try {
+            PerfectNumberServer server = new PerfectNumberServer();
+            Naming.rebind("rmi://localhost:1099/PerfectService", server);
+            System.out.println("Server đã sẵn sàng...");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+package com.mycompany.rmii;
+
+import java.rmi.Naming;
+import java.util.List;
+import java.util.Scanner;
+
+public class PerfectNumberClient {
+    public static void main(String[] args) {
+        try {
+            PerfectNumber service = (PerfectNumber) Naming.lookup("rmi://localhost:1099/PerfectService");
+            Scanner sc = new Scanner(System.in);
+
+            while (true) {
+                System.out.print("Nhập dãy số nguyên (cách nhau bằng ';') hoặc 'stop' để thoát: ");
+                String input = sc.nextLine().trim();
+
+                if (input.equalsIgnoreCase("stop")) {
+                    System.out.println("Client dừng chương trình.");
+                    break;
+                }
+
+                try {
+                    String[] parts = input.split(";");
+                    int[] numbers = new int[parts.length];
+                    for (int i = 0; i < parts.length; i++) {
+                        numbers[i] = Integer.parseInt(parts[i].trim());
+                    }
+
+                    // Gửi dãy số lên server
+                    List<String> results = service.findPerfectNumbers(numbers);
+
+                    // In kết quả
+                    for (String s : results) {
+                        System.out.println(s);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Dữ liệu nhập không hợp lệ! Vui lòng nhập lại.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+package com.mycompany.rmii;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.List;
+
+public interface PerfectNumber extends Remote {
+    // Hàm nhận dãy số, trả về danh sách kết quả
+    List<String> findPerfectNumbers(int[] numbers) throws RemoteException;
+}

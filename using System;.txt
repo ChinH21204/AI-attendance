@@ -1,0 +1,200 @@
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Data;
+    using System.Windows.Documents;
+    using System.Windows.Input;
+    using System.Windows.Media;
+    using System.Windows.Media.Imaging;
+    using System.Windows.Navigation;
+    using System.Windows.Shapes;
+
+    namespace thi4
+    {
+        /// <summary>
+        /// Interaction logic for MainWindow.xaml
+        /// </summary>
+        public partial class MainWindow : Window
+        {
+            Database2Entities db = new Database2Entities();
+            private SACH Sdangchon;
+            public MainWindow()
+            {
+                InitializeComponent();
+                LoadData();
+            }
+            private void LoadData()
+            {
+                DG_Sach.ItemsSource = db.SACHes.ToList();
+                cbb_theloai.ItemsSource = db.THELOAIs.ToList();
+                cbb_theloai.DisplayMemberPath = "TenTL";
+                cbb_theloai.SelectedValuePath = "MaTL";
+            }
+            private string laytheloai()
+            {
+                if (cbb_theloai.SelectedValue != null)
+                {
+                    return cbb_theloai.SelectedValue.ToString();
+                }
+                else
+                    return "";
+            }
+
+  private void Button_Tim(object sender, RoutedEventArgs e)
+        {
+            string keyword = txt_tim.Text.Trim().ToLower();
+            List<SINHVIEN> ketQua = new List<SINHVIEN>();
+            if (keyword == ""){
+                MessageBox.Show("Hãy nhập tên sinh viên để tìm", "Thông báo",
+                                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            else
+            {
+                foreach (SINHVIEN sv in db.SINHVIENs)
+                {
+                    if (sv.HoTen != null && sv.HoTen.ToLower().Contains(keyword))
+                    {
+                        ketQua.Add(sv);
+                    }
+                }
+                if (ketQua.Count > 0)
+                {
+                    DG_SinhVien.ItemsSource = ketQua;
+                }
+                else
+                {
+                    MessageBox.Show("Không tìm thấy sinh viên nào!", "Thông báo",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+  private void loadData()
+        {
+            DG_SinhVien.ItemsSource = db.SINHVIENs.ToList();
+
+            cbb_Mon.ItemsSource = db.MONHOCs.ToList();
+            cbb_Mon.DisplayMemberPath = "TenMon";
+            cbb_Mon.SelectedValuePath = "MaMon";
+        }
+            private DateTime laynamxb()
+            {
+                if (dpk_namxb.SelectedDate == null)
+                {
+                    return DateTime.Now;
+                }
+                else
+                {
+                    return dpk_namxb.SelectedDate.Value;
+                }
+            }
+            private void clearform()
+            {
+                txt_masach.Clear();
+                txt_tacgia.Clear();
+                txt_tuasach.Clear();
+                txt_tiemkiem.Clear();
+                cbb_theloai.SelectedIndex = -1;
+                dpk_namxb.SelectedDate = null;
+            }
+        
+
+            private void btn_them(object sender, RoutedEventArgs e)
+            {
+                SACH sach = new SACH
+                {
+                    MaSach = txt_masach.Text.Trim(),
+                    TacGia = txt_tacgia.Text.Trim(),
+                    TuaSach = txt_tuasach.Text.Trim(),
+                    NamXB = laynamxb(),
+                    MaTL = laytheloai(),
+                };
+                db.SACHes.Add(sach);
+                db.SaveChanges();
+                LoadData();
+                clearform();
+       
+
+            }
+
+            private void btn_sua(object sender, RoutedEventArgs e)
+            {
+                if (Sdangchon == null)
+                {
+                    MessageBox.Show("vui long chon sach de sua ", "thong bao", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    SACH sach = db.SACHes.Find(Sdangchon.MaSach);
+                    if (sach.MaSach != txt_masach.Text.Trim())
+                    {
+                        MessageBox.Show("khong tim thay ma sach de xoa ", "thong bao", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                    else
+                    {
+                        sach.MaSach = txt_masach.Text.Trim();
+                        sach.TuaSach = txt_tuasach.Text.Trim();
+                        sach.TacGia = txt_tacgia.Text.Trim();
+                        sach.NamXB = laynamxb();
+                        sach.MaTL = laytheloai();
+                        db.SaveChanges();
+                        MessageBox.Show("da sua thong tin sach thanh cong", "thong bao", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    clearform();
+                    LoadData();
+                }
+
+            }
+
+            private void btn_xoa(object sender, RoutedEventArgs e)
+            {
+                if (Sdangchon == null)
+
+                    MessageBox.Show("vui long chon sach de xoa", "thong bao", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                else
+                {
+                    SACH sach = db.SACHes.Remove(Sdangchon);
+                        db.SaveChanges();
+                    MessageBox.Show("da xoa sach thah cong", "thoong bao", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                }
+                clearform();
+                LoadData();
+            
+                }
+        
+
+            private void btn_lammoi(object sender, RoutedEventArgs e)
+            {
+                clearform();
+
+            }
+
+            private void btn_timkiem(object sender, RoutedEventArgs e)
+            {
+
+            }
+
+            private void btn_thoat(object sender, RoutedEventArgs e)
+            {
+                Close();
+            }
+
+            private void DG_Sach_SelectionChanged(object sender, SelectionChangedEventArgs e)
+            {
+                Sdangchon = DG_Sach.SelectedItem as SACH;
+                if (Sdangchon != null)
+                {
+                    txt_masach.Text = Sdangchon.MaSach;
+                    txt_tacgia.Text = Sdangchon.TacGia;
+                    txt_tuasach.Text = Sdangchon.TuaSach;
+                    dpk_namxb.SelectedDate = Sdangchon.NamXB;
+                    cbb_theloai.SelectedValue = Sdangchon.MaTL;
+                }
+            }
+        }
+    }
